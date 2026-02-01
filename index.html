@@ -832,7 +832,8 @@ const DocTemplates = {
     REGISTER_EX: { cls: 'EXCERPT', name: 'Register Excerpt', size: 4, fields: { entry: 'REC-4472', source: 'Archive' } },
     CAS_14: { cls: 'SLIP', name: 'Classification Slip', size: 2, fields: { class: 'Instructional' }, invalidator: 'CAS-14', dangerous: true },
     ACS_5: { cls: 'SLIP', name: 'Address Slip', size: 2, fields: { canonical: 'Northfield 14/3B' }, invalidator: 'ACS-5', dangerous: true },
-    IRN_9: { cls: 'SLIP', name: 'Identity Note', size: 2, fields: { primary: 'C-409-7734', secondary: 'C-409-7734-A' }, invalidator: 'IRN-9', dangerous: true }
+    IRN_9: { cls: 'SLIP', name: 'Identity Note', size: 2, fields: { primary: 'C-409-7734', secondary: 'C-409-7734-A' }, invalidator: 'IRN-9', dangerous: true },
+    VISA_APPLICATION: { cls: 'FORM', name: 'Visa Application', size: 4, fields: { country: 'Oceania', duration: '90 days', purpose: 'Work Assignment' }, action: true }
 };
 
 let docId = 0;
