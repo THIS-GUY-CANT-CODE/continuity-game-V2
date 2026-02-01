@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CONTINUITY</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+
+        body {
+            font-family: 'Special Elite', 'Courier New', monospace;
+            background: #0a0908;
+            color: #c4b48a;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        #game { width: 100vw; height: 100vh; display: flex; flex-direction: column; }
+
+        /* HUD */
+        #hud {
+            height: 40px;
+            background: linear-gradient(to bottom, #1a1814, #0a0806);
+            border-bottom: 2px solid #2a2418;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 11px;
+            flex-shrink: 0;
+        }
+
+        .hud-left { display: flex; gap: 25px; }
+        .hud-item { color: #6a5a4a; display: flex; align-items: center; gap: 6px; }
+        .hud-item span { color: #c4b48a; font-weight: bold; }
+        .hud-item .penalty { color: #8a4a3a; font-size: 9px; }
+
+        .ab-pips { display: flex; gap: 2px; }
+        .ab-pip { width: 8px; height: 14px; background: #4a6a4a; border-radius: 2px; }
+        .ab-pip.spent { background: #2a2a2a; }
+        .ab-pip.penalty { background: #4a2a2a; }
+
+        .nav-tabs { display: flex; gap: 2px; }
+        .nav-tab {
+            padding: 8px 12px;
+            background: #1a1814;
+            border: 1px solid #2a2418;
+            border-bottom: none;
+            color: #5a4a3a;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .nav-tab:hover:not(.locked) { background: #2a2418; color: #8a7a6a; }
+        .nav-tab.active { background: #2a2418; color: #c4b48a; }
+        .nav-tab .cost { font-size: 7px; color: #6a5a3a; }
+        .nav-tab.active .cost { visibility: hidden; }
+
+        /* Main View */
+        #main-view { flex: 1; position: relative; overflow: hidden; }
+        .room { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; }
+        .room.active { display: block; }
+
+        /* Room backgrounds */
+        #room-residence { background: #0c0a08; }
+        #room-study { background: #0f0c08; }
+        #room-processing { background: #08090a; }
+        #room-allocation { background: #0a0908; }
+        #room-mailbox { background: linear-gradient(to bottom, #1a1815, #0a0805); }
+        #room-archive { background: linear-gradient(to bottom, #12141a, #08090c); }
+
+        /* Desk surfaces */
+        .desk-surface {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 8px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.7);
+        }
+        .residence-desk { width: 900px; height: 500px; background: linear-gradient(145deg, #2a4a2a 0%, #3a5a3a 30%, #4a6a4a 50%, #3a5a3a 70%, #2a4a2a 100%); border: 6px solid #3a2a1a; }
+        .study-desk { width: 900px; height: 450px; background: linear-gradient(145deg, #5a3a20 0%, #7a5a3a 30%, #8a6a4a 50%, #7a5a3a 70%, #5a3a20 100%); border: 6px solid #3a2a1a; }
+        .processing-desk { width: 950px; height: 450px; background: linear-gradient(145deg, #3a3e44 0%, #4a4e54 30%, #5a5e64 50%, #4a4e54 70%, #3a3e44 100%); border: 4px solid #2a2c30; border-radius: 4px; }
+        .allocation-desk { width: 900px; height: 420px; background: linear-gradient(145deg, #3a3530 0%, #4a4540 30%, #5a5550 50%, #4a4540 70%, #3a3530 100%); border: 4px solid #2a2520; border-radius: 4px; }
+
+        /* Desk slots */
+        .desk-slots {
+            position: absolute;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: grid;
+            gap: 12px;
+        }
+        #room-residence .desk-slots, #room-study .desk-slots { grid-template-columns: repeat(3, 150px); grid-template-rows: repeat(2, 110px); }
+        #room-processing .desk-slots { grid-template-columns: repeat(4, 130px); grid-template-rows: repeat(2, 95px); top: 50%; }
+        #room-allocation .desk-slots { grid-template-columns: repeat(3, 140px); grid-template-rows: repeat(2, 100px); }
+
+        .desk-slot {
+            border: 2px dashed rgba(255,255,255,0.15);
+            border-radius: 4px;
+            background: rgba(0,0,0,0.1);
+            transition: all 0.2s;
+            position: relative;
+        }
+        .desk-slot:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25); }
+        .desk-slot.drag-over { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.4); }
+
+        /* Window slots */
+        .window-slots {
+            position: absolute;
+            top: 12%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 25px;
+        }
+        .window-slot {
+            width: 130px;
+            height: 75px;
+            background: linear-gradient(to bottom, #2a2c30, #1a1c20);
+            border: 3px solid #3a3c40;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .window-slot:hover { border-color: #5a5c60; }
+        .window-slot.drag-over { border-color: #7a7c80; background: #3a3c40; }
+        .window-label { font-size: 9px; color: #6a6c70; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+        .window-status { font-size: 7px; color: #4a4c50; }
+
+        /* Documents */
+        .document {
+            position: absolute;
+            background: linear-gradient(160deg, #e8dcc4 0%, #d8c8a8 50%, #c8b898 100%);
+            border: 2px solid #8a7a5a;
+            border-radius: 2px;
+            cursor: grab;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.3);
+            transition: transform 0.15s, box-shadow 0.15s;
+            overflow: hidden;
+        }
+        .document::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 20px;
+            background: linear-gradient(to bottom, #3a3428, #2a2418);
+        }
+        .document:hover { transform: translateY(-3px) rotate(1deg); box-shadow: 5px 5px 15px rgba(0,0,0,0.4); z-index: 100; }
+        .document.selected { outline: 3px solid #6a8a6a; outline-offset: 2px; }
+        .document.dragging { cursor: grabbing; transform: rotate(3deg) scale(1.08); box-shadow: 10px 10px 30px rgba(0,0,0,0.5); z-index: 1000; opacity: 0.9; }
+        .document.dangerous { border-left: 4px solid #6a3a3a; }
+        .document.worn { filter: sepia(0.3); }
+
+        .doc-size-1 { width: 55px; height: 40px; }
+        .doc-size-2 { width: 80px; height: 55px; }
+        .doc-size-4 { width: 125px; height: 85px; }
+        .doc-size-8 { width: 145px; height: 105px; }
+
+        .doc-title {
+            position: relative;
+            z-index: 1;
+            color: #c4b48a;
+            font-size: 7px;
+            padding: 3px 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .doc-body { padding: 4px; font-size: 6px; color: #3a3428; line-height: 1.3; }
+        .doc-field { display: flex; justify-content: space-between; padding: 1px 0; border-bottom: 1px dotted #a8986a; }
+        .doc-label { color: #6a5a4a; }
+        .doc-value { color: #2a2418; font-weight: bold; }
+        .doc-ref { position: absolute; bottom: 2px; left: 3px; font-size: 5px; color: #8a7a5a; }
+        .doc-class { position: absolute; bottom: 2px; right: 3px; font-size: 5px; color: #6a5a4a; text-transform: uppercase; }
+
+        /* Bin */
+        .bin-area {
+            position: absolute;
+            bottom: 25px;
+            left: 25px;
+            width: 90px;
+            height: 120px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .bin-area:hover { transform: scale(1.05); }
+        .bin-visual {
+            width: 70px;
+            height: 90px;
+            margin: 0 auto;
+            background: linear-gradient(to bottom, #4a4540, #3a3530, #2a2520);
+            border-radius: 5px 5px 12px 12px;
+            box-shadow: 3px 5px 15px rgba(0,0,0,0.4);
+            position: relative;
+        }
+        .bin-lid {
+            width: 80px;
+            height: 12px;
+            background: linear-gradient(to bottom, #5a5550, #4a4540);
+            border-radius: 4px;
+            margin: 0 auto 4px;
+            transition: transform 0.2s;
+            transform-origin: left center;
+        }
+        .bin-area.drag-over .bin-lid { transform: rotate(-30deg); }
+        .bin-count {
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 9px;
+            color: #8a7a6a;
+            background: rgba(0,0,0,0.4);
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+        .bin-label { text-align: center; font-size: 7px; color: #5a5550; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* Folder Overlay */
+        #folder-overlay {
+            position: fixed;
+            bottom: 0;
+            left: 20px;
+            width: 360px;
+            z-index: 500;
+            transition: transform 0.3s ease;
+            transform: translateY(calc(100% - 45px));
+        }
+        #folder-overlay.open { transform: translateY(0); }
+        .folder-tab {
+            width: 120px;
+            height: 45px;
+            background: linear-gradient(to bottom, #6a5a4a, #5a4a3a, #4a3a2a);
+            border: 3px solid #7a6a5a;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 11px;
+            color: #c4b48a;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.3);
+        }
+        .folder-tab:hover { background: linear-gradient(to bottom, #7a6a5a, #6a5a4a, #5a4a3a); }
+        .folder-panel {
+            background: linear-gradient(to bottom, #5a4a3a, #4a3a2a);
+            border: 3px solid #7a6a5a;
+            border-bottom: none;
+            border-radius: 0 10px 0 0;
+            padding: 12px;
+            min-height: 280px;
+        }
+        .folder-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid rgba(255,255,255,0.1);
+        }
+        .folder-title { font-size: 12px; color: #c4b48a; text-transform: uppercase; letter-spacing: 2px; }
+        .folder-capacity { font-size: 10px; color: #8a7a6a; }
+        .folder-nav { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
+        .folder-arrow {
+            width: 32px;
+            height: 24px;
+            background: linear-gradient(to bottom, #6a5a3a, #5a4a2a);
+            border: 2px solid #7a6a4a;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #c4b48a;
+            font-size: 12px;
+        }
+        .folder-arrow:hover { background: linear-gradient(to bottom, #7a6a4a, #6a5a3a); }
+        .folder-page-num { font-size: 16px; color: #c4b48a; }
+        .folder-contents {
+            background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 5px;
+            min-height: 160px;
+            padding: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-content: flex-start;
+        }
+        .folder-contents .document { position: relative; }
+
+        /* Mailbox */
+        .mailbox-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+        .mailbox-single {
+            width: 180px;
+            background: linear-gradient(to bottom, #5a5550, #4a4540);
+            border: 4px solid #3a3530;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+        .mailbox-number { font-size: 24px; color: #c4b48a; margin-bottom: 12px; letter-spacing: 3px; }
+        .mailbox-slot {
+            width: 100%;
+            height: 55px;
+            background: linear-gradient(to bottom, #3a3530, #2a2520);
+            border: 2px solid #4a4540;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .mailbox-slot:hover { background: linear-gradient(to bottom, #4a4540, #3a3530); }
+        .mailbox-slot.has-mail::after {
+            content: '';
+            width: 65%;
+            height: 35%;
+            background: linear-gradient(160deg, #e8dcc4, #d8c8a8);
+            border-radius: 2px;
+        }
+        .mail-count-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 22px;
+            height: 22px;
+            background: #6a3a3a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+            font-weight: bold;
+        }
+        .mailbox-label { font-size: 9px; color: #6a6560; margin-top: 8px; text-transform: uppercase; letter-spacing: 2px; }
+        .other-mailboxes { display: flex; gap: 12px; opacity: 0.4; }
+        .other-box {
+            width: 45px;
+            height: 55px;
+            background: linear-gradient(to bottom, #4a4540, #3a3530);
+            border: 2px solid #2a2520;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 7px;
+            color: #5a5550;
+        }
+
+        /* Archive */
+        .archive-wall {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 700px;
+            background: linear-gradient(to bottom, #4a4e54, #3a3e44);
+            border: 4px solid #2a2c30;
+            border-radius: 4px;
+            padding: 18px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+        }
+        .archive-title-plate {
+            position: absolute;
+            top: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(to bottom, #6a5a3a, #5a4a2a);
+            border: 2px solid #7a6a4a;
+            padding: 4px 20px;
+            border-radius: 3px;
+            font-size: 12px;
+            color: #c4b48a;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+        .archive-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            grid-template-rows: repeat(4, 65px);
+            gap: 6px;
+        }
+        .archive-drawer {
+            background: linear-gradient(to bottom, #5a5e64, #4a4e54);
+            border: 2px solid #3a3e44;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .archive-drawer:hover { background: linear-gradient(to bottom, #6a6e74, #5a5e64); transform: translateY(-2px); }
+        .archive-drawer.drag-over { background: #5a6a5a; border-color: #6a7a6a; }
+        .archive-drawer.has-doc { background: linear-gradient(to bottom, #5a5852, #4a4842); }
+        .archive-drawer.has-doc::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 45%;
+            height: 35%;
+            background: #c8b898;
+            border-radius: 2px;
+        }
+        .drawer-handle {
+            width: 35px;
+            height: 7px;
+            background: linear-gradient(to bottom, #8a7a4a, #6a5a2a);
+            border-radius: 2px;
+            z-index: 1;
+        }
+        .drawer-num { position: absolute; top: 3px; left: 5px; font-size: 7px; color: #6a6e74; }
+
+        /* Notifications */
+        #notifications {
+            position: fixed;
+            top: 48px;
+            right: 12px;
+            width: 260px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .notif {
+            background: linear-gradient(to bottom, #2a2820, #1a1810);
+            border: 1px solid #3a3830;
+            border-left: 4px solid #8a8a5a;
+            padding: 8px 10px;
+            font-size: 10px;
+            border-radius: 3px;
+            animation: slideIn 0.3s ease;
+        }
+        .notif.warning { border-left-color: #8a6a4a; }
+        .notif.error { border-left-color: #8a4a4a; }
+        .notif.success { border-left-color: #4a8a4a; }
+        .notif.hint { border-left-color: #4a6a8a; background: #1a2028; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+        /* Verb Bar */
+        #verb-bar {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            z-index: 400;
+            background: rgba(20,18,14,0.95);
+            padding: 10px;
+            border: 2px solid #3a3830;
+            border-radius: 6px;
+        }
+        .verb-row { display: flex; gap: 5px; }
+        .verb-btn {
+            padding: 6px 10px;
+            background: linear-gradient(to bottom, #3a3830, #2a2820);
+            border: 2px solid #4a4840;
+            border-radius: 4px;
+            color: #8a7a6a;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-width: 55px;
+        }
+        .verb-btn:hover:not(:disabled) { background: linear-gradient(to bottom, #4a4840, #3a3830); color: #c4b48a; }
+        .verb-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .verb-btn.active { background: linear-gradient(to bottom, #4a5a4a, #3a4a3a); border-color: #5a6a5a; color: #c4b48a; }
+        .verb-btn .cost { font-size: 7px; color: #6a5a3a; }
+
+        /* Action Button */
+        #actions {
+            position: fixed;
+            bottom: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 400;
+        }
+        .action-btn {
+            padding: 10px 25px;
+            background: linear-gradient(to bottom, #3a3830, #2a2820);
+            border: 2px solid #4a4840;
+            border-radius: 4px;
+            color: #a89878;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .action-btn:hover { background: linear-gradient(to bottom, #4a4840, #3a3830); color: #c4b48a; }
+
+        /* Modals */
+        .modal {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.92);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .modal.active { display: flex; }
+        .modal-box {
+            background: linear-gradient(to bottom, #2a2820, #1a1810);
+            border: 3px solid #4a4840;
+            border-radius: 6px;
+            padding: 25px;
+            max-width: 450px;
+            text-align: center;
+        }
+        .modal-title { font-size: 16px; color: #c4b48a; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 15px; }
+        .modal-text { font-size: 11px; color: #8a7a6a; line-height: 1.7; margin-bottom: 20px; }
+        .modal-btn {
+            padding: 10px 25px;
+            background: linear-gradient(to bottom, #4a4840, #3a3830);
+            border: 2px solid #5a5850;
+            border-radius: 4px;
+            color: #c4b48a;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .modal-btn:hover { background: linear-gradient(to bottom, #5a5850, #4a4840); }
+        .modal-content { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin: 15px 0; max-height: 250px; overflow-y: auto; padding: 8px; }
+        .modal-content .document { position: relative; cursor: pointer; }
+        .modal-content .document:hover { transform: translateY(-4px); }
+        .bin-empty { color: #5a5550; font-size: 11px; }
+
+        /* Cycle Transition */
+        #cycle-transition {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: #0a0908;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #cycle-transition.active { display: flex; }
+        .trans-cycle { font-size: 12px; color: #5a5a4a; text-transform: uppercase; letter-spacing: 3px; }
+        .trans-text { font-size: 14px; color: #8a7a6a; text-align: center; line-height: 1.7; max-width: 350px; }
+        .trans-effects { font-size: 10px; color: #6a5a4a; text-align: center; }
+
+        /* Game Over */
+        .gameover-ending { font-size: 24px; color: #c4b48a; letter-spacing: 4px; margin-bottom: 8px; }
+        .gameover-subtitle { font-size: 11px; color: #6a5a4a; margin-bottom: 20px; }
+        .gameover-stats { text-align: left; margin-bottom: 20px; }
+        .gameover-stat { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px dotted #3a3830; font-size: 10px; }
+        .gameover-stat-label { color: #6a5a4a; }
+        .gameover-stat-value { color: #c4b48a; }
+        .gameover-lesson { font-size: 10px; color: #5a6a5a; font-style: italic; margin-top: 15px; padding-top: 12px; border-top: 1px solid #3a3830; }
+
+        /* Puzzle Hint */
+        #puzzle-hint {
+            position: fixed;
+            top: 48px;
+            left: 15px;
+            background: rgba(30,35,40,0.95);
+            border: 2px solid #3a4a5a;
+            border-radius: 6px;
+            padding: 12px;
+            max-width: 250px;
+            z-index: 400;
+        }
+        .hint-title { font-size: 9px; color: #6a7a8a; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+        .hint-text { font-size: 10px; color: #9a9a8a; line-height: 1.5; }
+
+        /* Lamp */
+        .desk-lamp { position: absolute; top: 20px; right: 45px; cursor: pointer; z-index: 10; }
+        .lamp-shade { width: 60px; height: 35px; background: linear-gradient(to bottom, #4a4035, #3a3025); border-radius: 30px 30px 5px 5px; margin: 0 auto; }
+        .lamp-neck { width: 7px; height: 35px; background: #3a3025; margin: 0 auto; }
+        .lamp-base { width: 45px; height: 10px; background: linear-gradient(to bottom, #4a4035, #2a2015); border-radius: 4px; margin: 0 auto; }
+        .lamp-glow { position: absolute; top: 35px; left: 50%; transform: translateX(-50%); width: 180px; height: 160px; background: radial-gradient(ellipse at top, rgba(255,200,100,0.15) 0%, transparent 70%); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+        .desk-lamp.on .lamp-glow { opacity: 1; }
+        .desk-lamp.on .lamp-shade { background: linear-gradient(to bottom, #6a6055, #5a5045); box-shadow: 0 0 20px rgba(255,180,80,0.3); }
+        .study-lamp .lamp-shade { background: linear-gradient(to bottom, #2a5a3a, #1a4a2a); }
+        .study-lamp.on .lamp-shade { background: linear-gradient(to bottom, #3a7a4a, #2a6a3a); box-shadow: 0 0 25px rgba(100,200,100,0.3); }
+        .study-lamp .lamp-glow { background: radial-gradient(ellipse at top, rgba(100,200,100,0.12) 0%, transparent 70%); }
+
+        /* Easter Eggs */
+        .wall-slogan { position: absolute; top: 25px; left: 50%; transform: translateX(-50%); font-size: 9px; color: rgba(100,90,80,0.12); letter-spacing: 3px; text-transform: uppercase; }
+        .desk-easter-egg { position: absolute; bottom: 55px; right: 110px; font-size: 7px; color: rgba(100,90,70,0); transition: color 0.5s; transform: rotate(-3deg); }
+        .desk-lamp.on ~ .desk-easter-egg { color: rgba(100,90,70,0.2); }
+        .room-101 { position: absolute; bottom: 15px; right: 25px; width: 45px; height: 60px; background: linear-gradient(to bottom, #2a2c30, #1a1c20); border: 2px solid #3a3c40; border-radius: 3px 3px 0 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 6px; }
+        .room-101-label { font-size: 6px; color: #4a4c50; letter-spacing: 1px; }
+        .room-101-knob { position: absolute; right: 6px; top: 50%; width: 5px; height: 5px; background: #5a5c60; border-radius: 50%; }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <!-- HUD -->
+        <div id="hud">
+            <div class="hud-left">
+                <div class="hud-item">CYCLE <span id="hud-cycle">1</span>/50</div>
+                <div class="hud-item">AB <div class="ab-pips" id="hud-ab"></div><span class="penalty" id="hud-penalty"></span></div>
+                <div class="hud-item">MAIL <span id="hud-mail">0</span></div>
+                <div class="hud-item">BACKLOG <span id="hud-backlog">0</span></div>
+            </div>
+            <div class="nav-tabs">
+                <div class="nav-tab active" data-room="residence">Residence<span class="cost">-0</span></div>
+                <div class="nav-tab" data-room="study">Study<span class="cost">-3</span></div>
+                <div class="nav-tab" data-room="processing">Processing<span class="cost">-3</span></div>
+                <div class="nav-tab" data-room="allocation">Allocation<span class="cost">-4</span></div>
+                <div class="nav-tab" data-room="mailbox">Mailbox<span class="cost">-2</span></div>
+                <div class="nav-tab" data-room="archive">Archive<span class="cost">-3</span></div>
+            </div>
+        </div>
+
+        <!-- Main View -->
+        <div id="main-view">
+            <!-- RESIDENCE -->
+            <div id="room-residence" class="room active">
+                <div class="wall-slogan">CONTINUITY IS STABILITY</div>
+                <div class="desk-surface residence-desk">
+                    <div class="desk-lamp on" id="lamp-residence"><div class="lamp-shade"></div><div class="lamp-neck"></div><div class="lamp-base"></div><div class="lamp-glow"></div></div>
+                    <div class="desk-easter-egg">2+2=5</div>
+                    <div class="desk-slots" id="slots-residence"></div>
+                    <div class="bin-area" id="bin-residence"><div class="bin-lid"></div><div class="bin-visual"><span class="bin-count">0/3</span></div><div class="bin-label">Memory Hole</div></div>
+                </div>
+            </div>
+
+            <!-- STUDY -->
+            <div id="room-study" class="room">
+                <div class="desk-surface study-desk">
+                    <div class="desk-lamp study-lamp on" id="lamp-study"><div class="lamp-shade"></div><div class="lamp-neck"></div><div class="lamp-base"></div><div class="lamp-glow"></div></div>
+                    <div class="desk-slots" id="slots-study"></div>
+                    <div class="bin-area" id="bin-study"><div class="bin-lid"></div><div class="bin-visual"><span class="bin-count">0/3</span></div><div class="bin-label">Disposal</div></div>
+                </div>
+            </div>
+
+            <!-- PROCESSING -->
+            <div id="room-processing" class="room">
+                <div class="desk-surface processing-desk">
+                    <div class="window-slots">
+                        <div class="window-slot" id="window-general"><div class="window-label">Window A</div><div class="window-status">General</div></div>
+                        <div class="window-slot" id="window-class"><div class="window-label">Window B</div><div class="window-status">Classification</div></div>
+                        <div class="window-slot" id="window-correct"><div class="window-label">Window C</div><div class="window-status">Corrections</div></div>
+                    </div>
+                    <div class="desk-slots" id="slots-processing"></div>
+                </div>
+            </div>
+
+            <!-- ALLOCATION -->
+            <div id="room-allocation" class="room">
+                <div class="desk-surface allocation-desk">
+                    <div class="window-slots">
+                        <div class="window-slot" id="window-work"><div class="window-label">Work</div><div class="window-status">Eligibility</div></div>
+                        <div class="window-slot" id="window-payment"><div class="window-label">Payment</div><div class="window-status">Processing</div></div>
+                    </div>
+                    <div class="desk-slots" id="slots-allocation"></div>
+                </div>
+            </div>
+
+            <!-- MAILBOX -->
+            <div id="room-mailbox" class="room">
+                <div class="mailbox-container">
+                    <div class="other-mailboxes"><div class="other-box">442</div><div class="other-box">443</div><div class="other-box">444</div></div>
+                    <div class="mailbox-single">
+                        <div class="mailbox-number">445</div>
+                        <div class="mailbox-slot" id="mailbox-slot"><div class="mail-count-badge" id="mail-badge" style="display:none">0</div></div>
+                        <div class="mailbox-label">Your Mailbox</div>
+                    </div>
+                    <div class="other-mailboxes"><div class="other-box">446</div><div class="other-box">447</div><div class="other-box">448</div></div>
+                </div>
+            </div>
+
+            <!-- ARCHIVE -->
+            <div id="room-archive" class="room">
+                <div class="archive-wall">
+                    <div class="archive-title-plate">Archives</div>
+                    <div class="archive-grid" id="archive-grid"></div>
+                    <div class="room-101"><div class="room-101-label">ROOM 101</div><div class="room-101-knob"></div></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FOLDER OVERLAY -->
+        <div id="folder-overlay">
+            <div class="folder-tab" id="folder-tab">📁 Open</div>
+            <div class="folder-panel">
+                <div class="folder-header"><span class="folder-title">Documents</span><span class="folder-capacity" id="folder-cap">0/32</span></div>
+                <div class="folder-nav"><div class="folder-arrow" id="folder-prev">◀</div><span class="folder-page-num"><span id="folder-page">1</span>/4</span><div class="folder-arrow" id="folder-next">▶</div></div>
+                <div class="folder-contents" id="folder-contents"></div>
+            </div>
+        </div>
+
+        <!-- Puzzle Hint -->
+        <div id="puzzle-hint"><div class="hint-title">Today's Task</div><div class="hint-text" id="hint-text">File your documents.</div></div>
+
+        <!-- Verb Bar -->
+        <div id="verb-bar">
+            <div class="verb-row">
+                <button class="verb-btn" data-verb="read" data-cost="0">Read<span class="cost">0</span></button>
+                <button class="verb-btn" data-verb="open" data-cost="1">Open<span class="cost">1</span></button>
+                <button class="verb-btn" data-verb="compare" data-cost="1">Compare<span class="cost">1</span></button>
+            </div>
+            <div class="verb-row">
+                <button class="verb-btn" data-verb="file" data-cost="1">File<span class="cost">1</span></button>
+                <button class="verb-btn" data-verb="staple" data-cost="1">Staple<span class="cost">1</span></button>
+                <button class="verb-btn" data-verb="submit" data-cost="2">Submit<span class="cost">2</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notifications -->
+    <div id="notifications"></div>
+
+    <!-- Actions -->
+    <div id="actions"><button class="action-btn" id="btn-end-cycle">End Cycle</button></div>
+
+    <!-- Cycle Transition -->
+    <div id="cycle-transition"><div class="trans-cycle" id="trans-cycle">CYCLE 1 → 2</div><div class="trans-text" id="trans-text">Night falls. The system processes.</div><div class="trans-effects" id="trans-effects"></div></div>
+
+    <!-- Modals -->
+    <div class="modal" id="modal-gameover">
+        <div class="modal-box">
+            <div class="gameover-ending" id="gameover-ending">CLOSED</div>
+            <div class="gameover-subtitle" id="gameover-subtitle">Your file has been closed.</div>
+            <div class="gameover-stats" id="gameover-stats"></div>
+            <div class="gameover-lesson" id="gameover-lesson"></div>
+            <button class="modal-btn" onclick="location.reload()">Try Again</button>
+        </div>
+    </div>
+
+    <div class="modal" id="modal-mail">
+        <div class="modal-box"><div class="modal-title">Mailbox 445</div><div class="modal-content" id="mail-items"></div><button class="modal-btn" onclick="closeMail()">Close</button></div>
+    </div>
+
+    <div class="modal" id="modal-bin">
+        <div class="modal-box"><div class="modal-title">Discarded Items</div><div class="modal-text">Click to retrieve (costs 1 AB)</div><div class="modal-content" id="bin-items"></div><button class="modal-btn" onclick="closeBin()">Close</button></div>
+    </div>
+
+    <div class="modal" id="modal-doc">
+        <div class="modal-box" style="max-width:380px;"><div class="modal-title" id="view-doc-title">Document</div><div id="view-doc-content" style="text-align:left;margin:15px 0;font-size:10px;"></div><button class="modal-btn" onclick="closeDocView()">Close</button></div>
+    </div>
+
+<script>
+// ============================================================
+// CONFIGURATION
+// ============================================================
+const Config = {
+    AB_BASE: 12,
+    AB_PENALTY_CAP: 6,
+    BACKLOG_STEP: 4,
+    FOLDER_MAX: 32,
+    BIN_MAX: 3,
+    TOTAL_CYCLES: 50,
+    TRAVEL_COSTS: { residence: 0, study: 3, processing: 3, allocation: 4, mailbox: 2, archive: 3 },
+    VERB_COSTS: { read: 0, open: 1, compare: 1, file: 1, staple: 1, submit: 2 }
+};
+
+// ============================================================
+// STATE
+// ============================================================
+const State = {
+    cycle: 1,
+    ab: Config.AB_BASE,
+    abMax: Config.AB_BASE,
+    abPenalty: 0,
+    exposure: 0,
+    drift: 0,
+    hygiene: 10,
+    identityConflicts: 0,
+    deadlineMisses: 0,
+    flags: {},
+    invalidators: [],
+    gameOver: false,
+    ending: null
+};
+
+// ============================================================
+// DOCUMENTS
+// ============================================================
+const DocTemplates = {
+    CASE_ID: { cls: 'ID', name: 'Case ID', size: 2, fields: { case_id: 'C-409-7734', status: 'Provisional' } },
+    QUEUE_TICKET: { cls: 'RECEIPT', name: 'Queue Ticket', size: 1, fields: { number: '047', window: 'A' } },
+    FEE_INVOICE: { cls: 'NOTICE', name: 'Fee Invoice', size: 4, fields: { amount: '50 units', due: 'Cycle 3' }, action: true },
+    APPOINTMENT: { cls: 'NOTICE', name: 'Appointment', size: 2, fields: { date: 'Cycle 2', window: 'B' } },
+    WARNING: { cls: 'NOTICE', name: 'Warning', size: 4, fields: { reason: 'Discrepancy', deadline: 'Cycle 5' }, action: true },
+    ADDRESS_REG: { cls: 'FORM', name: 'Address Form', size: 4, fields: { addr_a: '14 Northfield Lane', addr_b: '14 Northfield Ln.', addr_c: 'Unit 3B, Northfield' }, action: true },
+    ENROLLMENT: { cls: 'NOTICE', name: 'Enrollment', size: 4, fields: { term: 'T-2024-A', program: 'Engineering' } },
+    COURSE_DECL: { cls: 'FORM', name: 'Course Declaration', size: 4, fields: { courses: 'ENG-101', load: '3 units' }, action: true },
+    WORK_APP: { cls: 'FORM', name: 'Work Application', size: 4, fields: { type: 'Part-time', hours: '20/week' }, action: true },
+    PAYMENT_RCPT: { cls: 'RECEIPT', name: 'Payment Receipt', size: 2, fields: { amount: '50 units', date: 'Cycle 2' } },
+    REGISTER_EX: { cls: 'EXCERPT', name: 'Register Excerpt', size: 4, fields: { entry: 'REC-4472', source: 'Archive' } },
+    CAS_14: { cls: 'SLIP', name: 'Classification Slip', size: 2, fields: { class: 'Instructional' }, invalidator: 'CAS-14', dangerous: true },
+    ACS_5: { cls: 'SLIP', name: 'Address Slip', size: 2, fields: { canonical: 'Northfield 14/3B' }, invalidator: 'ACS-5', dangerous: true },
+    IRN_9: { cls: 'SLIP', name: 'Identity Note', size: 2, fields: { primary: 'C-409-7734', secondary: 'C-409-7734-A' }, invalidator: 'IRN-9', dangerous: true }
+};
+
+let docId = 0;
+function createDoc(key, overrides = {}) {
+    const t = DocTemplates[key];
+    if (!t) return null;
+    const doc = {
+        id: 'doc_' + (++docId),
+        key: key,
+        cls: t.cls,
+        name: t.name,
+        size: t.size,
+        fields: { ...t.fields, ...(overrides.fields || {}) },
+        wear: 0,
+        action: t.action || false,
+        processed: false,
+        invalidator: t.invalidator || null,
+        dangerous: t.dangerous || false,
+        receivedCycle: State.cycle,
+        ref: 'REF-' + State.cycle + '-' + Math.random().toString(36).substr(2, 4).toUpperCase()
+    };
+    return doc;
+}
+
+// ============================================================
+// INVENTORY
+// ============================================================
+const Inv = {
+    folder: [],
+    folderPage: 0,
+    desks: {
+        residence: Array(6).fill(null),
+        study: Array(6).fill(null),
+        processing: Array(8).fill(null),
+        allocation: Array(6).fill(null)
+    },
+    bins: { residence: [], study: [] },
+    archive: Array(24).fill(null),
+    mail: [],
+    
+    units() { return this.folder.reduce((s, d) => s + d.size, 0); },
+    canAdd(doc) { return this.units() + doc.size <= Config.FOLDER_MAX; },
+    backlog() {
+        let c = this.mail.length;
+        for (const d of this.folder) if (d.action && !d.processed) c++;
+        return c;
+    }
+};
+
+// ============================================================
+// UI STATE
+// ============================================================
+let currentRoom = 'residence';
+let folderOpen = false;
+let selectedDoc = null;
+let dragged = null;
+let dragFrom = null;
+let currentBinRoom = null;
+
+// ============================================================
+// AB SYSTEM
+// ============================================================
+function calcAB() {
+    const bl = Inv.backlog();
+    State.abPenalty = Math.min(Math.floor(bl / Config.BACKLOG_STEP), Config.AB_PENALTY_CAP);
+    State.abMax = Config.AB_BASE - State.abPenalty;
+    State.ab = State.abMax;
+}
+
+function spendAB(n) {
+    if (State.ab < n) return false;
+    State.ab -= n;
+    render();
+    return true;
+}
+
+function hasAB(n) { return State.ab >= n; }
+
+// ============================================================
+// CAMPAIGN
+// ============================================================
+const Campaign = {
+    cycles: {
+        1: { name: 'Arrival', mail: ['CASE_ID', 'QUEUE_TICKET'], hint: 'Take documents from mailbox. File them in your folder.' },
+        2: { name: 'First Fee', mail: ['FEE_INVOICE'], hint: 'A fee invoice arrives. File it carefully.' },
+        3: { name: 'Registration', mail: ['ADDRESS_REG', 'APPOINTMENT'], hint: 'Choose your address format. All seem correct.' },
+        4: { name: 'Study Track', mail: ['ENROLLMENT', 'COURSE_DECL'], hint: 'Compare documents for matching term IDs.' },
+        5: { name: 'First Deadline', mail: ['WARNING'], hint: 'Submit the required form at Processing.' },
+        6: { name: 'Work Application', mail: ['WORK_APP'], hint: 'Visit Allocation for work eligibility.' },
+        7: { name: 'Receipts', mail: ['PAYMENT_RCPT', 'QUEUE_TICKET'], hint: 'Keep receipts. They prove you acted.' },
+        8: { name: 'First Comparison', mail: ['REGISTER_EX'], hint: 'Compare the excerpt to your ID.' },
+        9: { name: 'Classification', mail: ['CAS_14'], hint: 'A small slip. It looks harmless.' },
+        10: { name: 'Routine', mail: ['QUEUE_TICKET'], hint: 'A quiet day. Use it wisely.' },
+        11: { name: 'Backlog Pressure', mail: ['FEE_INVOICE', 'WARNING'], hint: 'High backlog reduces tomorrow\'s AB.' },
+        12: { name: 'Attachment Order', mail: ['PAYMENT_RCPT'], hint: 'When stapling, order matters.' },
+        13: { name: 'Date Formats', mail: ['APPOINTMENT', 'REGISTER_EX'], hint: 'Different sites use different formats.' },
+        14: { name: 'Address Drift', mail: ['ACS_5'], hint: 'The address slip changes what the system thinks.' },
+        15: { name: 'Mid Review', mail: ['WARNING'], hint: 'Your records are examined.' },
+        16: { name: 'Identity Question', mail: ['IRN_9'], hint: 'The system finds two versions of you.' },
+        17: { name: 'Bundle Schema', mail: ['FEE_INVOICE', 'QUEUE_TICKET'], hint: 'Submissions require specific order.' },
+        18: { name: 'Courtesy Access', mail: ['ENROLLMENT'], hint: 'You can still attend.' },
+        19: { name: 'Integrity Check', mail: ['QUEUE_TICKET'], hint: 'Documents need integrity strips.' },
+        20: { name: 'Crossroads', mail: ['WARNING'], hint: 'Everything comes back.' }
+    },
+    get(n) { return this.cycles[n] || { name: 'Cycle ' + n, mail: [], hint: 'Survive.' }; },
+    genMail(n) {
+        const c = this.get(n);
+        return c.mail.map(k => createDoc(k));
+    }
+};
+
+// ============================================================
+// ENDINGS
+// ============================================================
+const Endings = {
+    check() {
+        if (State.cycle < 15) return null;
+        if (State.exposure <= 6 && State.flags.EXIT_TOKEN && State.flags.NIGHT_ROUTE) return 'ABSENT';
+        let nullC = 0;
+        if (State.drift >= 16) nullC++;
+        if (State.flags.FORGERY) nullC++;
+        if (State.identityConflicts >= 2) nullC++;
+        if (nullC >= 2) return 'NULL_FILE';
+        let closedC = 0;
+        if (State.exposure >= 14) closedC++;
+        if (State.invalidators.length > 0) closedC++;
+        if (State.deadlineMisses >= 2) closedC++;
+        if (closedC >= 2) return 'CLOSED';
+        if (State.cycle >= 50 && State.hygiene >= 8 && State.exposure <= 12) return 'CONTINUED';
+        if (State.cycle >= 50) return 'CLOSED';
+        return null;
+    },
+    data: {
+        CLOSED: { title: 'CLOSED', sub: 'Your file has been closed.', lesson: 'Compliance increases surface area.' },
+        CONTINUED: { title: 'CONTINUED', sub: 'Status continues. Obligations increase.', lesson: 'Route smarter next time.' },
+        NULL_FILE: { title: 'NULL FILE', sub: 'Internally inconsistent.', lesson: 'Forgery is a scalpel, not lifestyle.' },
+        ABSENT: { title: 'ABSENT', sub: 'You exit legibility.', lesson: 'Sometimes winning is disappearing.' }
+    },
+    trigger(e) {
+        State.gameOver = true;
+        State.ending = e;
+        const d = this.data[e];
+        document.getElementById('gameover-ending').textContent = d.title;
+        document.getElementById('gameover-subtitle').textContent = d.sub;
+        document.getElementById('gameover-stats').innerHTML = `
+            <div class="gameover-stat"><span class="gameover-stat-label">Cycles</span><span class="gameover-stat-value">${State.cycle}/50</span></div>
+            <div class="gameover-stat"><span class="gameover-stat-label">Exposure</span><span class="gameover-stat-value">${State.exposure}</span></div>
+            <div class="gameover-stat"><span class="gameover-stat-label">Drift</span><span class="gameover-stat-value">${State.drift}</span></div>
+            <div class="gameover-stat"><span class="gameover-stat-label">Hygiene</span><span class="gameover-stat-value">${State.hygiene}/10</span></div>
+        `;
+        document.getElementById('gameover-lesson').textContent = d.lesson;
+        document.getElementById('modal-gameover').classList.add('active');
+    }
+};
+
+// ============================================================
+// RENDER
+// ============================================================
+function render() {
+    document.getElementById('hud-cycle').textContent = State.cycle;
+    document.getElementById('hud-mail').textContent = Inv.mail.length;
+    document.getElementById('hud-backlog').textContent = Inv.backlog();
+    
+    let abHtml = '';
+    for (let i = 0; i < Config.AB_BASE; i++) {
+        if (i < State.abPenalty) abHtml += '<div class="ab-pip penalty"></div>';
+        else if (i < Config.AB_BASE - State.ab) abHtml += '<div class="ab-pip spent"></div>';
+        else abHtml += '<div class="ab-pip"></div>';
+    }
+    document.getElementById('hud-ab').innerHTML = abHtml;
+    document.getElementById('hud-penalty').textContent = State.abPenalty > 0 ? `(-${State.abPenalty})` : '';
+    
+    document.getElementById('folder-cap').textContent = Inv.units() + '/' + Config.FOLDER_MAX;
+    document.getElementById('folder-page').textContent = Inv.folderPage + 1;
+    
+    const cycle = Campaign.get(State.cycle);
+    document.getElementById('hint-text').textContent = cycle.hint;
+    
+    renderRoom(currentRoom);
+    renderFolder();
+}
+
+function renderRoom(room) {
+    if (room === 'mailbox') { renderMailbox(); return; }
+    if (room === 'archive') { renderArchive(); return; }
+    
+    const container = document.getElementById('slots-' + room);
+    if (!container || !Inv.desks[room]) return;
+    
+    container.innerHTML = '';
+    for (let i = 0; i < Inv.desks[room].length; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'desk-slot';
+        slot.dataset.slot = i;
+        slot.dataset.room = room;
+        
+        if (Inv.desks[room][i]) slot.appendChild(makeDocEl(Inv.desks[room][i], 'desk', { room, slot: i }));
+        
+        slot.ondragover = e => { e.preventDefault(); slot.classList.add('drag-over'); };
+        slot.ondragleave = () => slot.classList.remove('drag-over');
+        slot.ondrop = e => { e.preventDefault(); slot.classList.remove('drag-over'); dropOnSlot(room, i); };
+        container.appendChild(slot);
+    }
+    
+    const bin = document.getElementById('bin-' + room);
+    if (bin && Inv.bins[room]) {
+        bin.querySelector('.bin-count').textContent = Inv.bins[room].length + '/' + Config.BIN_MAX;
+        bin.ondragover = e => { e.preventDefault(); bin.classList.add('drag-over'); };
+        bin.ondragleave = () => bin.classList.remove('drag-over');
+        bin.ondrop = e => { e.preventDefault(); bin.classList.remove('drag-over'); dropOnBin(room); };
+        bin.onclick = () => openBin(room);
+    }
+    
+    if (room === 'processing' || room === 'allocation') {
+        document.querySelectorAll('.window-slot').forEach(ws => {
+            ws.ondragover = e => { e.preventDefault(); ws.classList.add('drag-over'); };
+            ws.ondragleave = () => ws.classList.remove('drag-over');
+            ws.ondrop = e => { e.preventDefault(); ws.classList.remove('drag-over'); dropOnWindow(ws.id); };
+        });
+    }
+}
+
+function renderFolder() {
+    const cont = document.getElementById('folder-contents');
+    cont.innerHTML = '';
+    const start = Inv.folderPage * 8;
+    Inv.folder.slice(start, start + 8).forEach(doc => cont.appendChild(makeDocEl(doc, 'folder', {})));
+    cont.ondragover = e => e.preventDefault();
+    cont.ondrop = e => { e.preventDefault(); dropOnFolder(); };
+}
+
+function renderMailbox() {
+    const slot = document.getElementById('mailbox-slot');
+    const badge = document.getElementById('mail-badge');
+    if (Inv.mail.length > 0) {
+        slot.classList.add('has-mail');
+        badge.style.display = 'flex';
+        badge.textContent = Inv.mail.length;
+        slot.onclick = openMail;
+    } else {
+        slot.classList.remove('has-mail');
+        badge.style.display = 'none';
+        slot.onclick = null;
+    }
+}
+
+function renderArchive() {
+    const grid = document.getElementById('archive-grid');
+    grid.innerHTML = '';
+    for (let i = 0; i < 24; i++) {
+        const drawer = document.createElement('div');
+        drawer.className = 'archive-drawer';
+        drawer.innerHTML = '<span class="drawer-num">' + String(i + 1).padStart(2, '0') + '</span><div class="drawer-handle"></div>';
+        if (Inv.archive[i]) { drawer.classList.add('has-doc'); drawer.title = Inv.archive[i].name; }
+        drawer.onclick = () => archiveClick(i);
+        drawer.ondragover = e => { e.preventDefault(); drawer.classList.add('drag-over'); };
+        drawer.ondragleave = () => drawer.classList.remove('drag-over');
+        drawer.ondrop = e => { e.preventDefault(); drawer.classList.remove('drag-over'); dropOnArchive(i); };
+        grid.appendChild(drawer);
+    }
+}
+
+function makeDocEl(doc, loc, ctx) {
+    const el = document.createElement('div');
+    el.className = 'document doc-size-' + doc.size;
+    if (doc.dangerous) el.classList.add('dangerous');
+    if (doc.wear >= 5) el.classList.add('worn');
+    el.draggable = true;
+    el.dataset.id = doc.id;
+    
+    let html = '<div class="doc-title">' + doc.name + '</div>';
+    if (doc.size >= 4) {
+        html += '<div class="doc-body">';
+        for (const [k, v] of Object.entries(doc.fields)) {
+            html += '<div class="doc-field"><span class="doc-label">' + k + ':</span><span class="doc-value">' + v + '</span></div>';
+        }
+        html += '</div>';
+    }
+    html += '<span class="doc-ref">' + doc.ref + '</span>';
+    html += '<span class="doc-class">' + doc.cls + '</span>';
+    el.innerHTML = html;
+    
+    el.ondragstart = e => { dragged = doc; dragFrom = { loc, ...ctx }; el.classList.add('dragging'); };
+    el.ondragend = () => { el.classList.remove('dragging'); dragged = null; dragFrom = null; };
+    el.onclick = e => { e.stopPropagation(); selectDoc(doc); };
+    
+    return el;
+}
+
+function selectDoc(doc) {
+    selectedDoc = doc;
+    document.querySelectorAll('.document').forEach(el => el.classList.toggle('selected', el.dataset.id === doc.id));
+    notify('Selected: ' + doc.name);
+}
+
+// ============================================================
+// DROP HANDLERS
+// ============================================================
+function dropOnSlot(room, idx) {
+    if (!dragged) return;
+    if (Inv.desks[room][idx]) { notify('Slot occupied!', 'warning'); return; }
+    
+    let doc = removeDoc(dragged, dragFrom);
+    if (doc) {
+        Inv.desks[room][idx] = doc;
+        if (!spendAB(1)) { Inv.desks[room][idx] = null; returnDoc(doc, dragFrom); return; }
+        notify('Placed "' + doc.name + '".');
+    }
+    render();
+}
+
+function dropOnBin(room) {
+    if (!dragged) return;
+    let doc = removeDoc(dragged, dragFrom);
+    if (doc) {
+        if (Inv.bins[room].length >= Config.BIN_MAX) {
+            const lost = Inv.bins[room].shift();
+            notify('"' + lost.doc.name + '" was destroyed!', 'warning');
+        }
+        Inv.bins[room].push({ doc, cycle: State.cycle });
+        if (!spendAB(1)) { Inv.bins[room].pop(); returnDoc(doc, dragFrom); return; }
+        notify('Discarded "' + doc.name + '".', 'warning');
+    }
+    render();
+}
+
+function dropOnFolder() {
+    if (!dragged || dragFrom.loc === 'folder') return;
+    let doc = removeDoc(dragged, dragFrom);
+    if (doc) {
+        if (!Inv.canAdd(doc)) { notify('Folder full!', 'error'); returnDoc(doc, dragFrom); render(); return; }
+        Inv.folder.push(doc);
+        notify('Filed "' + doc.name + '".');
+    }
+    render();
+}
+
+function dropOnArchive(idx) {
+    if (!dragged || Inv.archive[idx]) return;
+    let doc = removeDoc(dragged, dragFrom);
+    if (doc) {
+        Inv.archive[idx] = doc;
+        if (!spendAB(1)) { Inv.archive[idx] = null; returnDoc(doc, dragFrom); return; }
+        notify('Stored in archive.');
+    }
+    render();
+}
+
+function dropOnWindow(windowId) {
+    if (!dragged) return;
+    let doc = removeDoc(dragged, dragFrom);
+    if (!doc) return;
+    
+    if (!spendAB(2)) { returnDoc(doc, dragFrom); render(); return; }
+    
+    State.exposure += 2;
+    State.drift += 1;
+    
+    if (doc.invalidator) State.invalidators.push(doc.invalidator);
+    
+    notify('Submitted to ' + windowId + '. (+2 exposure)', 'success');
+    render();
+    
+    // Check ending
+    const ending = Endings.check();
+    if (ending) setTimeout(() => Endings.trigger(ending), 500);
+}
+
+function removeDoc(doc, from) {
+    if (from.loc === 'folder') {
+        const idx = Inv.folder.findIndex(d => d.id === doc.id);
+        if (idx >= 0) return Inv.folder.splice(idx, 1)[0];
+    } else if (from.loc === 'desk') {
+        const d = Inv.desks[from.room][from.slot];
+        Inv.desks[from.room][from.slot] = null;
+        return d;
+    }
+    return null;
+}
+
+function returnDoc(doc, from) {
+    if (from.loc === 'folder') Inv.folder.push(doc);
+    else if (from.loc === 'desk') Inv.desks[from.room][from.slot] = doc;
+}
+
+// ============================================================
+// MAILBOX
+// ============================================================
+function openMail() {
+    if (Inv.mail.length === 0) return;
+    const cont = document.getElementById('mail-items');
+    cont.innerHTML = '';
+    Inv.mail.forEach((doc, idx) => {
+        const el = makeDocEl(doc, 'mail', { idx });
+        el.draggable = false;
+        el.onclick = () => takeMail(idx);
+        cont.appendChild(el);
+    });
+    document.getElementById('modal-mail').classList.add('active');
+}
+
+function closeMail() { document.getElementById('modal-mail').classList.remove('active'); }
+
+function takeMail(idx) {
+    const doc = Inv.mail[idx];
+    if (!doc) return;
+    if (!Inv.canAdd(doc)) { notify('Folder full!', 'error'); return; }
+    if (!spendAB(1)) { notify('Not enough AB!', 'error'); return; }
+    Inv.mail.splice(idx, 1);
+    Inv.folder.push(doc);
+    notify('Took "' + doc.name + '".', 'success');
+    closeMail();
+    render();
+}
+
+// ============================================================
+// BIN - FIXED: Now you can retrieve items
+// ============================================================
+function openBin(room) {
+    currentBinRoom = room;
+    const cont = document.getElementById('bin-items');
+    cont.innerHTML = '';
+    if (Inv.bins[room].length === 0) {
+        cont.innerHTML = '<div class="bin-empty">Empty</div>';
+    } else {
+        Inv.bins[room].forEach((item, idx) => {
+            const el = makeDocEl(item.doc, 'bin', { room, idx });
+            el.draggable = false;
+            el.onclick = () => retrieveFromBin(room, idx);
+            cont.appendChild(el);
+        });
+    }
+    document.getElementById('modal-bin').classList.add('active');
+}
+
+function closeBin() { document.getElementById('modal-bin').classList.remove('active'); currentBinRoom = null; }
+
+function retrieveFromBin(room, idx) {
+    const item = Inv.bins[room][idx];
+    if (!item) return;
+    if (!Inv.canAdd(item.doc)) { notify('Folder full!', 'error'); return; }
+    if (!spendAB(1)) { notify('Not enough AB!', 'error'); return; }
+    Inv.bins[room].splice(idx, 1);
+    Inv.folder.push(item.doc);
+    notify('Retrieved "' + item.doc.name + '".', 'success');
+    closeBin();
+    render();
+}
+
+// ============================================================
+// ARCHIVE
+// ============================================================
+function archiveClick(idx) {
+    const doc = Inv.archive[idx];
+    if (!doc) return;
+    if (!Inv.canAdd(doc)) { notify('Folder full!', 'error'); return; }
+    if (!spendAB(1)) { notify('Not enough AB!', 'error'); return; }
+    Inv.archive[idx] = null;
+    Inv.folder.push(doc);
+    State.exposure += 1;
+    notify('Retrieved from archive. (+1 exposure)', 'warning');
+    render();
+}
+
+// ============================================================
+// DOCUMENT VIEW
+// ============================================================
+function closeDocView() { document.getElementById('modal-doc').classList.remove('active'); }
+
+// ============================================================
+// VERBS
+// ============================================================
+function execVerb(verb) {
+    if (!selectedDoc) { notify('Select a document first.', 'warning'); return; }
+    const cost = Config.VERB_COSTS[verb] || 0;
+    if (!hasAB(cost)) { notify('Not enough AB!', 'error'); return; }
+    
+    switch (verb) {
+        case 'read':
+            document.getElementById('view-doc-title').textContent = selectedDoc.name;
+            let html = '<p><strong>Class:</strong> ' + selectedDoc.cls + '</p>';
+            html += '<p><strong>Reference:</strong> ' + selectedDoc.ref + '</p>';
+            html += '<p><strong>Received:</strong> Cycle ' + selectedDoc.receivedCycle + '</p>';
+            html += '<hr style="border-color:#3a3830;margin:10px 0">';
+            for (const [k, v] of Object.entries(selectedDoc.fields)) {
+                html += '<p><strong>' + k + ':</strong> ' + v + '</p>';
+            }
+            if (selectedDoc.dangerous) html += '<p style="color:#8a4a4a"><em>This document contains a classification marker.</em></p>';
+            document.getElementById('view-doc-content').innerHTML = html;
+            document.getElementById('modal-doc').classList.add('active');
+            break;
+        case 'compare':
+            // Find docs on current desk
+            const desk = Inv.desks[currentRoom];
+            if (!desk) { notify('No desk here.', 'warning'); return; }
+            const onDesk = desk.filter(d => d);
+            if (onDesk.length < 2) { notify('Need 2 documents on desk to compare.', 'warning'); return; }
+            spendAB(cost);
+            State.drift += 1;
+            notify('Compared documents. Fields may differ. (+1 drift)');
+            break;
+        case 'submit':
+            if (currentRoom !== 'processing' && currentRoom !== 'allocation') {
+                notify('Must be at Processing or Allocation to submit.', 'warning');
+                return;
+            }
+            notify('Drag document to a window to submit.');
+            break;
+        default:
+            spendAB(cost);
+            selectedDoc.wear += 1;
+            notify(verb.charAt(0).toUpperCase() + verb.slice(1) + ' completed.');
+    }
+    render();
+}
+
+// ============================================================
+// CYCLE MANAGEMENT
+// ============================================================
+function endCycle() {
+    // Check ending first
+    const ending = Endings.check();
+    if (ending) { Endings.trigger(ending); return; }
+    
+    // Show transition
+    const trans = document.getElementById('cycle-transition');
+    document.getElementById('trans-cycle').textContent = 'CYCLE ' + State.cycle + ' → ' + (State.cycle + 1);
+    
+    const msgs = ['Night falls. The system processes.', 'Another day passes.', 'The records are updated.', 'Nothing changes. Everything continues.'];
+    document.getElementById('trans-text').textContent = msgs[Math.floor(Math.random() * msgs.length)];
+    
+    let effects = [];
+    // Process bins - items expire after 2 cycles
+    ['residence', 'study'].forEach(room => {
+        Inv.bins[room] = Inv.bins[room].filter(item => {
+            if (State.cycle - item.cycle >= 2) {
+                effects.push('"' + item.doc.name + '" destroyed.');
+                return false;
+            }
+            return true;
+        });
+    });
+    
+    // Backlog effects
+    const bl = Inv.backlog();
+    if (bl > 4) {
+        State.hygiene -= 1;
+        effects.push('Hygiene -1 (backlog pressure)');
+    }
+    if (bl > 8) {
+        State.deadlineMisses += 1;
+        effects.push('Deadline missed!');
+    }
+    
+    // Drift accumulates
+    State.drift += 1;
+    effects.push('Drift +1 (passive)');
+    
+    document.getElementById('trans-effects').innerHTML = effects.join('<br>');
+    trans.classList.add('active');
+    
+    setTimeout(() => {
+        trans.classList.remove('active');
+        
+        // Advance cycle
+        State.cycle++;
+        
+        // Generate new mail
+        const newMail = Campaign.genMail(State.cycle);
+        Inv.mail.push(...newMail);
+        if (newMail.length > 0) notify(newMail.length + ' new mail arrived.');
+        
+        // Recalculate AB
+        calcAB();
+        
+        render();
+    }, 3000);
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function switchRoom(room) {
+    if (room === currentRoom) return;
+    
+    const cost = Config.TRAVEL_COSTS[room] || 0;
+    if (cost > 0 && !spendAB(cost)) {
+        notify('Not enough AB to travel!', 'error');
+        return;
+    }
+    
+    document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    
+    document.getElementById('room-' + room).classList.add('active');
+    document.querySelector('[data-room="' + room + '"]').classList.add('active');
+    
+    currentRoom = room;
+    if (cost > 0) notify('Traveled to ' + room + '. (-' + cost + ' AB)');
+    render();
+}
+
+// ============================================================
+// NOTIFICATIONS
+// ============================================================
+function notify(msg, type = 'info') {
+    const area = document.getElementById('notifications');
+    const el = document.createElement('div');
+    el.className = 'notif ' + type;
+    el.textContent = msg;
+    area.appendChild(el);
+    setTimeout(() => { el.style.opacity = '0'; el.style.transition = 'opacity 0.3s'; setTimeout(() => el.remove(), 300); }, 3500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+    // Nav tabs
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.onclick = () => switchRoom(tab.dataset.room);
+    });
+    
+    // Folder toggle
+    document.getElementById('folder-tab').onclick = () => {
+        folderOpen = !folderOpen;
+        document.getElementById('folder-overlay').classList.toggle('open', folderOpen);
+        document.getElementById('folder-tab').textContent = folderOpen ? '📁 Close' : '📁 Open';
+    };
+    
+    // Folder pagination
+    document.getElementById('folder-prev').onclick = () => { if (Inv.folderPage > 0) { Inv.folderPage--; renderFolder(); } };
+    document.getElementById('folder-next').onclick = () => { if (Inv.folderPage < 3) { Inv.folderPage++; renderFolder(); } };
+    
+    // Lamps
+    document.getElementById('lamp-residence').onclick = function() { this.classList.toggle('on'); };
+    document.getElementById('lamp-study').onclick = function() { this.classList.toggle('on'); };
+    
+    // Verbs
+    document.querySelectorAll('.verb-btn').forEach(btn => {
+        btn.onclick = () => execVerb(btn.dataset.verb);
+    });
+    
+    // End cycle
+    document.getElementById('btn-end-cycle').onclick = endCycle;
+    
+    // Starting docs
+    Inv.folder.push(createDoc('CASE_ID'));
+    Inv.folder.push(createDoc('QUEUE_TICKET'));
+    
+    // Initial mail
+    Inv.mail.push(...Campaign.genMail(1));
+    
+    // Calculate initial AB
+    calcAB();
+    
+    // Render
+    render();
+    
+    notify('Welcome to Processing. Your documents are in order... for now.', 'hint');
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
