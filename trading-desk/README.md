@@ -32,6 +32,8 @@ max drawdown -11%, about 8 trades a year, in the market 11% of the time.
 Positive in every sub-period but smallest in 2010–2019 (+0.34% a trade). On £400 that
 is roughly £15–£20 a year in expectation. The core is where the money compounds.
 
+The plan page lives at https://claude.ai/artifact/QZJaHezVpE7nupynwoQdgJ (also in `state/page.json`).
+
 ## Daily routine (5 minutes, before 08:00 UK)
 
 ```bash
