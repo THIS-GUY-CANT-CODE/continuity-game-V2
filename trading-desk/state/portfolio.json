@@ -1,0 +1,50 @@
+{
+  "currency": "GBP",
+  "account": "Trading 212 Stocks & Shares ISA (flexible)",
+  "start_date": "2026-10-26",
+  "start_value": 1300,
+  "core": [
+    {
+      "ticker": "VWRP",
+      "name": "Vanguard FTSE All-World UCITS ETF (acc)",
+      "target_gbp": 650,
+      "units": 0,
+      "cost_gbp": 0
+    },
+    {
+      "ticker": "SGLN",
+      "name": "iShares Physical Gold ETC",
+      "target_gbp": 130,
+      "units": 0,
+      "cost_gbp": 0
+    }
+  ],
+  "cash_buffer_gbp": 120,
+  "unallocated_gbp": 780,
+  "sleeve": {
+    "size_gbp": 400,
+    "instrument": "VUAG",
+    "rule": "composite2",
+    "max_hold_days": 10,
+    "stop_pct": 0.06,
+    "in_position": false,
+    "entry_date": null,
+    "entry_price": null,
+    "units": 0,
+    "cost_gbp": 0,
+    "entry_spx": null,
+    "days_held": 0,
+    "realised_pnl_gbp": 0.0,
+    "history": []
+  },
+  "contributions": [],
+  "sma200": {
+    "level": 7291.31,
+    "asof": "2026-10-23",
+    "source": "wallstreetnumbers.com SMA(200) for 23 Oct 2026"
+  },
+  "notes": [
+    "Signals are computed on the S&P 500 index; the sleeve trades VUAG, its GBP-listed accumulating tracker."
+  ],
+  "last_spx_close": 7623.68
+}

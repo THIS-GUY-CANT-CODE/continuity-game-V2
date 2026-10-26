@@ -1,0 +1,341 @@
+<title>The £1,300 Desk</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a single-column morning sheet (720px measure); decision card first, evidence second, rules third; tables scroll inside their own boxes. */
+:root{
+  --bg:#F3F5F8; --surface:#FFFFFF; --surface-2:#EAEEF3; --fg:#141A24; --muted:#5B6572; --line:#D8DEE6;
+  --accent:#1C5CAB; --accent-bg:#E6EEF9; --series:#2A78D6; --series-soft:#B7D3F6;
+  --brass:#8F6414; --brass-bg:#F7EDD6;
+  --good:#1E7F4F; --good-bg:#E4F3EA; --warn:#8F6414; --warn-bg:#F7EDD6; --bad:#B23A48; --bad-bg:#F8E3E6;
+  --font-display:"Bricolage Grotesque","Avenir Next","Segoe UI",sans-serif;
+  --font-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono","SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F141B; --surface:#161D26; --surface-2:#1E2731; --fg:#E7ECF2; --muted:#9AA6B5; --line:#2A3441;
+    --accent:#5598E7; --accent-bg:#17304F; --series:#3987E5; --series-soft:#1C4A80;
+    --brass:#D9A441; --brass-bg:#3A2D12;
+    --good:#4CBF7A; --good-bg:#153324; --warn:#D9A441; --warn-bg:#3A2D12; --bad:#E06B7A; --bad-bg:#3D1A21;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F141B; --surface:#161D26; --surface-2:#1E2731; --fg:#E7ECF2; --muted:#9AA6B5; --line:#2A3441;
+  --accent:#5598E7; --accent-bg:#17304F; --series:#3987E5; --series-soft:#1C4A80;
+  --brass:#D9A441; --brass-bg:#3A2D12;
+  --good:#4CBF7A; --good-bg:#153324; --warn:#D9A441; --warn-bg:#3A2D12; --bad:#E06B7A; --bad-bg:#3D1A21;
+  color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--font-body);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.page{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 64px;display:grid;gap:40px}
+h1,h2,h3,h4{font-family:var(--font-display);line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(2.4rem,7vw,3.6rem);font-weight:800;letter-spacing:-0.02em}
+h2{font-size:1.65rem;font-weight:700;letter-spacing:-0.01em}
+h3{font-size:1.2rem;font-weight:700}
+h4{font-size:1rem;font-weight:700;margin-top:18px}
+p{margin:0;max-width:66ch}
+.eyebrow{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.masthead{display:grid;gap:12px}
+.stand{font-size:1.12rem;color:var(--muted);max-width:60ch}
+section{display:grid;gap:16px;scroll-margin-top:16px}
+section > p, section > ul, section > ol{max-width:66ch}
+ul,ol{margin:0;padding-left:1.25rem;display:grid;gap:8px}
+li{padding-left:.2rem}
+li::marker{color:var(--muted);font-family:var(--font-mono);font-size:.9em}
+strong{font-weight:600}
+code{font-family:var(--font-mono);font-size:.88em;background:var(--surface-2);padding:.1em .35em;border-radius:4px}
+a{color:var(--accent);text-decoration-thickness:1px;text-underline-offset:3px}
+a:focus-visible,button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+hr{border:0;border-top:1px solid var(--line);margin:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px 22px;display:grid;gap:12px}
+.card > *{min-width:0}
+.decision{border-left:5px solid var(--accent)}
+.dec-head{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;justify-content:space-between}
+.pill{display:inline-flex;align-items:center;gap:.45em;font-family:var(--font-mono);font-size:.8rem;font-weight:500;padding:.3em .75em;border-radius:999px;border:1px solid transparent;white-space:nowrap}
+.pill::before{content:"";width:.55em;height:.55em;border-radius:50%;background:currentColor}
+.pill-cash,.pill-hold{color:var(--muted);background:var(--surface-2);border-color:var(--line)}
+.pill-buy{color:var(--good);background:var(--good-bg)}
+.pill-sell{color:var(--brass);background:var(--brass-bg)}
+.why{font-size:1.05rem}
+.instr{font-weight:500}
+.asof{color:var(--muted);font-size:.9rem}
+.toc{display:flex;flex-wrap:wrap;gap:6px 18px;font-family:var(--font-mono);font-size:.82rem}
+.toc a{color:var(--muted);text-decoration:none}
+.toc a:hover{color:var(--accent);text-decoration:underline}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;gap:4px;min-width:0}
+.tile .lbl{font-size:.8rem;color:var(--muted)}
+.tile .val{font-family:var(--font-display);font-weight:700;font-size:1.6rem;line-height:1.1}
+.tile .sub{font-family:var(--font-mono);font-size:.76rem;color:var(--muted)}
+.scroll{overflow-x:auto;max-width:100%}
+.tbl{border-collapse:collapse;width:100%;font-size:.93rem;font-variant-numeric:tabular-nums}
+.tbl th,.tbl td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-family:var(--font-mono);font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+.tbl td.num,.tbl th.num{text-align:right;font-family:var(--font-mono);font-size:.88rem;white-space:nowrap}
+.tbl tr.total td{font-weight:600;border-top:2px solid var(--line)}
+.tbl .fired{color:var(--good);font-weight:600}
+.note{background:var(--surface-2);border-radius:10px;padding:14px 16px;font-size:.95rem;display:grid;gap:8px}
+.note.warn{background:var(--warn-bg)}
+.verdict{border-left:5px solid var(--brass)}
+.chart{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px 10px;display:grid;gap:8px;min-width:0}
+.chart .ttl{font-weight:600;font-size:.98rem}
+.chart .sub{font-size:.85rem;color:var(--muted)}
+.hbars{display:grid;gap:10px;padding:4px 0 6px}
+.hrow{display:grid;gap:4px;min-width:0}
+.hlbl{font-size:.9rem}
+.htrack{display:flex;align-items:center;gap:8px;height:22px;border-left:1px solid var(--line)}
+.hbar{height:22px;background:var(--series);border-radius:0 4px 4px 0;min-width:2px;flex:none;cursor:default}
+.hbar:hover,.hbar:focus,.cbar:hover,.cbar:focus{background:var(--accent);outline:none}
+.hval{font-family:var(--font-mono);font-size:.84rem;font-weight:500;white-space:nowrap}
+.cols{display:grid;gap:6px;padding-top:8px}
+.plot{position:relative;height:190px;margin-left:56px;border-bottom:1px solid var(--line)}
+.gl{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.gl span{position:absolute;left:-56px;top:-.65em;width:48px;text-align:right;font-family:var(--font-mono);font-size:.74rem;color:var(--muted)}
+.colrow{position:absolute;inset:0;display:flex;align-items:flex-end}
+.col{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;flex:1;min-width:0}
+.cval{font-family:var(--font-mono);font-size:.8rem;font-weight:500;margin-bottom:6px}
+.cbar{width:24px;max-width:40%;background:var(--series);border-radius:4px 4px 0 0;flex:none;cursor:default}
+.xlabels{display:flex;margin-left:56px}
+.xlabels span{flex:1;text-align:center;font-family:var(--font-mono);font-size:.76rem;color:var(--muted)}
+.chart details{font-size:.85rem;color:var(--muted)}
+.chart details summary{cursor:pointer}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--fg);color:var(--bg);font-family:var(--font-mono);font-size:.78rem;padding:6px 9px;border-radius:6px;max-width:260px;line-height:1.35}
+.rulebox{display:grid;gap:14px}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start}
+.rule .k{font-family:var(--font-mono);font-size:.76rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding-top:.35em;min-width:5.5em}
+.rule .v{min-width:0}
+.steps{counter-reset:s;display:grid;gap:12px;padding:0;list-style:none}
+.steps li{counter-increment:s;display:grid;grid-template-columns:2.2rem 1fr;gap:10px;padding:0}
+.steps li::before{content:counter(s,decimal-leading-zero);font-family:var(--font-mono);color:var(--brass);font-weight:500;padding-top:.15em}
+.steps li > div{min-width:0}
+.steps .t{font-weight:600}
+.small{font-size:.9rem;color:var(--muted)}
+.src{font-size:.88rem;color:var(--muted);display:grid;gap:6px;padding-left:1.1rem}
+@media (max-width:480px){.card{padding:16px}.rule{grid-template-columns:1fr;gap:4px}.rule .k{padding-top:0}}
+@media (max-width:640px){.tbl.stack thead{display:none}.tbl.stack tr{display:grid;grid-template-columns:1fr;gap:3px;padding:12px 0;border-bottom:1px solid var(--line)}.tbl.stack td{display:block;border:0;padding:0;text-align:left;white-space:normal;font-family:var(--font-body);font-size:.93rem}.tbl.stack td[data-l]::before{content:attr(data-l) " · ";font-family:var(--font-mono);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}}
+@media (prefers-reduced-motion:no-preference){.hbar,.cbar{transition:background .15s}}
+</style>
+
+<div class="page">
+  <header class="masthead">
+    <p class="eyebrow">Trading 212 · Stocks &amp; Shares ISA · everything in pounds</p>
+    <h1>The £1,300 Desk</h1>
+    <p class="stand">A rules-based way to trade daily with a small account. Most mornings you do nothing. Some mornings you buy a dip in the S&amp;P 500 and sell the bounce. The core keeps compounding underneath.</p>
+    <nav class="toc" aria-label="Sections">
+      <a href="#verdict">The verdict</a><a href="#portfolio">Portfolio</a><a href="#rules">Rulebook</a><a href="#routine">Morning routine</a><a href="#brief">Today's brief</a><a href="#automation">Daily update</a><a href="#sources">Sources</a>
+    </nav>
+  </header>
+
+  <section class="card decision" id="today" aria-label="Today's decision">
+    <!--DECISION-->
+  </section>
+
+  <section id="verdict">
+    <h2>What daily trading £1,300 actually pays</h2>
+    <p>You asked for a deep look, so here is the uncomfortable part first. The best large studies of people who day-trade their own money all land in the same place. In Brazil, of everyone who kept day trading for more than 300 days, 97% lost money and 0.4% earned more than a bank teller. In Taiwan, fewer than 1% of day traders earned reliably positive returns after costs over 15 years. The losers were not stupid. They were paying costs on every trade and guessing on direction.</p>
+    <p>With £1,300 on Trading 212 the costs are not commissions (there are none) but the small percentages that hide in each trade: the 0.15% currency fee each way on anything priced in dollars, the 0.5% stamp duty on every UK share purchase, and the bid-offer spread. Here is what a round trip a day costs over a year, before you have made or lost a penny on direction.</p>
+    <div class="chart" id="chartCost">
+      <div class="ttl">Yearly trading costs on £1,300, one round trip a day, four ways</div>
+      <div class="sub">Pounds per year. 250 trading days. Spread assumptions: 0.05% US large caps, 0.1% UK shares and ETFs.</div>
+      <div class="hbars" id="hbCost" role="img" aria-label="Horizontal bars of yearly costs: UK shares £1,950; US stock converting pounds each trade £1,138; US stock holding dollars about £245; this plan about £5"></div>
+      <details><summary>Table</summary>
+        <div class="scroll"><table class="tbl"><thead><tr><th>Approach</th><th class="num">Cost per round trip</th><th class="num">Per year</th></tr></thead><tbody>
+        <tr><td>UK shares daily (0.5% stamp duty on each buy plus spread)</td><td class="num">0.60%</td><td class="num">£1,950</td></tr>
+        <tr><td>US stock daily, converting pounds on every trade (0.15% FX each way plus spread)</td><td class="num">0.35%</td><td class="num">£1,138</td></tr>
+        <tr><td>US stock daily, holding a dollar balance (spread only)</td><td class="num">0.05 to 0.10%</td><td class="num">£165 to £325</td></tr>
+        <tr><td>This plan (about 8 ETF round trips a year plus fund charges)</td><td class="num">0.10%</td><td class="num">about £5</td></tr>
+        </tbody></table></div>
+      </details>
+    </div>
+    <p>So "buy low, sell high every day" with pounds in a US stock would hand Trading 212 and the market makers most of your account in a year. The plan below uses GBP-listed ETFs instead: no currency fee, no stamp duty, no commission. The only cost is a spread of a few hundredths of a percent.</p>
+
+    <h3>Does buying dips actually work?</h3>
+    <p>I tested the classic short-term dip rules on 33 years of S&amp;P 500 data (a total-return series that mimics an accumulating tracker, 1993 to December 2025), charging 0.05% per side and filling every order at the <em>next</em> close, which is slower than you will manage at the London open. Buy only when the index is above its 200-day average and at least two of four pullback triggers fire; sell on the first close above the 5-day average, after 10 days, or 6% below entry.</p>
+    <div class="tiles" aria-label="Backtest headline numbers">
+      <div class="tile"><div class="lbl">Winning trades</div><div class="val">68%</div><div class="sub">274 trades</div></div>
+      <div class="tile"><div class="lbl">Average trade</div><div class="val">+0.53%</div><div class="sub">median +0.58%</div></div>
+      <div class="tile"><div class="lbl">Trades a year</div><div class="val">8.3</div><div class="sub">held 3.4 days</div></div>
+      <div class="tile"><div class="lbl">Worst drawdown</div><div class="val">-11%</div><div class="sub">vs -55% buy and hold</div></div>
+    </div>
+    <div class="chart" id="chartEdge">
+      <div class="ttl">Average gain per trade, by period</div>
+      <div class="sub">Percent per trade after costs. The edge is real in every decade and smallest in the calm 2010s.</div>
+      <div class="cols" id="colEdge" role="img" aria-label="Columns of average gain per trade by period: 1993 to 1999 +0.87%; 2000 to 2009 +0.38%; 2010 to 2019 +0.34%; 2020 to 2025 +0.57%"></div>
+      <details><summary>Table</summary>
+        <div class="scroll"><table class="tbl"><thead><tr><th>Period</th><th class="num">Trades</th><th class="num">Win rate</th><th class="num">Avg trade</th><th class="num">Sleeve CAGR</th><th class="num">Sleeve max drawdown</th><th class="num">Buy and hold CAGR</th></tr></thead><tbody>
+        <tr><td>1993 to 1999</td><td class="num">70</td><td class="num">71%</td><td class="num">+0.87%</td><td class="num">8.9%</td><td class="num">-5.9%</td><td class="num">21.3%</td></tr>
+        <tr><td>2000 to 2009</td><td class="num">63</td><td class="num">59%</td><td class="num">+0.38%</td><td class="num">2.3%</td><td class="num">-8.2%</td><td class="num">-0.9%</td></tr>
+        <tr><td>2010 to 2019</td><td class="num">87</td><td class="num">68%</td><td class="num">+0.34%</td><td class="num">2.9%</td><td class="num">-11.4%</td><td class="num">13.3%</td></tr>
+        <tr><td>2020 to 2025</td><td class="num">54</td><td class="num">74%</td><td class="num">+0.57%</td><td class="num">5.3%</td><td class="num">-7.7%</td><td class="num">14.9%</td></tr>
+        <tr class="total"><td>1993 to 2025</td><td class="num">274</td><td class="num">68%</td><td class="num">+0.53%</td><td class="num">4.4%</td><td class="num">-11.4%</td><td class="num">10.7%</td></tr>
+        </tbody></table></div>
+      </details>
+    </div>
+    <p>Translate that to a £400 sleeve and the honest numbers are: a typical trade makes about £2, a typical year makes £15 to £20, the worst single trade in 33 years would have cost £32, and the deepest losing run £46. While the sleeve waits in cash (89% of the time) Trading 212 pays interest on it, currently around 3.6% a year, which is another £13.</p>
+    <div class="card verdict">
+      <h3>The verdict</h3>
+      <p><strong>You cannot earn an income from £1,300, and anyone who says otherwise is selling something.</strong> What you can do is run a professional process on a small account: keep most of it compounding in cheap global trackers, trade a defined sleeve on rules with a measured edge, pay almost nothing in costs, and keep a journal. Do that for a year and the habit is worth far more than the £80 or so the account is likely to make. If you add money monthly, the same machine scales without changing a rule.</p>
+    </div>
+  </section>
+
+  <section id="portfolio">
+    <h2>The portfolio</h2>
+    <p>Four buckets, all bought inside a Trading 212 Stocks &amp; Shares ISA so there is never any tax to think about. Every line is traded in pounds on the London Stock Exchange. Buy by value in the app (it handles fractional units from £1).</p>
+    <div class="tiles" aria-label="Allocation">
+      <div class="tile"><div class="lbl">Core · world equities</div><div class="val">£650</div><div class="sub">VWRP · 50%</div></div>
+      <div class="tile"><div class="lbl">Core · gold</div><div class="val">£130</div><div class="sub">SGLN · 10%</div></div>
+      <div class="tile"><div class="lbl">Cash buffer</div><div class="val">£120</div><div class="sub">earns interest · 9%</div></div>
+      <div class="tile"><div class="lbl">Trading sleeve</div><div class="val">£400</div><div class="sub">VUAG on signal · 31%</div></div>
+    </div>
+    <div class="scroll"><table class="tbl stack"><thead><tr><th>Bucket</th><th>Instrument</th><th class="num">Amount</th><th class="num">Indicative price (23 Oct)</th><th>Why</th></tr></thead><tbody>
+      <tr><td data-l="Bucket">Core</td><td data-l="Instrument">VWRP · Vanguard FTSE All-World UCITS ETF, accumulating</td><td data-l="Amount" class="num">£650</td><td data-l="Indicative price (23 Oct)" class="num">£141.78 → about 4.58 units</td><td data-l="Why">About 3,500 companies in one line, dividends reinvested, 0.22% a year. Buy once, add to it, never sell on a whim.</td></tr>
+      <tr><td data-l="Bucket">Core</td><td data-l="Instrument">SGLN · iShares Physical Gold ETC</td><td data-l="Amount" class="num">£130</td><td data-l="Indicative price (23 Oct)" class="num">£59.66 → about 2.18 units</td><td data-l="Why">The one thing that tends to hold up when equities fall hard. 0.12% a year. A permanent 10%, not a call on the gold price.</td></tr>
+      <tr><td data-l="Bucket">Buffer</td><td data-l="Instrument">GBP cash in the ISA (switch on interest on cash)</td><td data-l="Amount" class="num">£120</td><td data-l="Indicative price (23 Oct)" class="num">—</td><td data-l="Why">Dry powder. It goes into VWRP in £60 chunks on deep dips and refills from any money you add.</td></tr>
+      <tr><td data-l="Bucket">Sleeve</td><td data-l="Instrument">VUAG · Vanguard S&amp;P 500 UCITS ETF, accumulating</td><td data-l="Amount" class="num">£400</td><td data-l="Indicative price (23 Oct)" class="num">£110.82 → about 3.61 units</td><td data-l="Why">The trading instrument. Tight spread, 0.07% a year, tracks the index the signals are computed on. Sits in cash between trades.</td></tr>
+    </tbody></table></div>
+    <h3>What a year could look like</h3>
+    <p>These are ranges, not forecasts. Equities fall 10% in most years at some point and 30% to 50% once or twice a decade. The sleeve numbers come from the backtest and the cash rate from Trading 212's current variable rate.</p>
+    <div class="scroll"><table class="tbl stack"><thead><tr><th>Bucket</th><th class="num">Typical year</th><th class="num">Poor year</th><th class="num">2008-style year</th></tr></thead><tbody>
+      <tr><td data-l="Bucket">World equities £650</td><td data-l="Typical year" class="num">+£45</td><td data-l="Poor year" class="num">-£100</td><td data-l="2008-style year" class="num">-£260</td></tr>
+      <tr><td data-l="Bucket">Gold £130</td><td data-l="Typical year" class="num">+£5</td><td data-l="Poor year" class="num">-£25</td><td data-l="2008-style year" class="num">+£10</td></tr>
+      <tr><td data-l="Bucket">Cash buffer £120</td><td data-l="Typical year" class="num">+£4</td><td data-l="Poor year" class="num">+£4</td><td data-l="2008-style year" class="num">+£4</td></tr>
+      <tr><td data-l="Bucket">Sleeve £400 (interest plus trades)</td><td data-l="Typical year" class="num">+£30</td><td data-l="Poor year" class="num">-£30</td><td data-l="2008-style year" class="num">-£45</td></tr>
+      <tr class="total"><td data-l="Bucket">Whole account £1,300</td><td data-l="Typical year" class="num">about +£85 (6.5%)</td><td data-l="Poor year" class="num">about -£150</td><td data-l="2008-style year" class="num">about -£290</td></tr>
+    </tbody></table></div>
+    <div class="note">
+      <strong>Account setup, once.</strong>
+      <span>Use the Stocks &amp; Shares ISA, not the Invest or CFD account. It is flexible, so money you withdraw can go back in the same tax year, and nothing inside it is ever taxed. Turn on "interest on cash" in settings; the rate is variable, paid monthly, and part of the cash sits in money market funds rather than a bank. Keep the account in GBP only. Never open the CFD tab: it is leveraged, charges overnight fees, and Trading 212's own warning says most retail CFD accounts lose money.</span>
+    </div>
+  </section>
+
+  <section id="rules">
+    <h2>The rulebook</h2>
+    <p>Rules you can check with a yes or no, decided the night before, written here so that the morning version of you does not negotiate with them.</p>
+    <div class="card rulebox">
+      <h3>Sleeve: buy the dip, sell the bounce</h3>
+      <div class="rule"><div class="k">Trend</div><div class="v">Only buy when the S&amp;P 500 closed above its 200-day average. Below it, the sleeve stays in cash and earns interest, however tempting the dip.</div></div>
+      <div class="rule"><div class="k">Entry</div><div class="v">At least two of four pullback triggers on the previous US close: RSI(2) below 10 · RSI(4) below 25 · three straight down closes · 2% or more below the 10-day high. Buy £400 of VUAG after 08:05 UK the next morning, limit order at the live offer.</div></div>
+      <div class="rule"><div class="k">Exit</div><div class="v">Sell at the next London open after the first close above the 5-day average. Failing that, sell after 10 trading days. Failing that, sell if the price is 6% below your entry. Whichever comes first.</div></div>
+      <div class="rule"><div class="k">Size</div><div class="v">One position at a time, the whole sleeve, nothing else. The worst realistic loss on one trade is about £25 to £32, under 2.5% of the account.</div></div>
+      <div class="rule"><div class="k">Stop</div><div class="v">If the sleeve is ever 15% (£60) below its best value, it stops for a calendar month. We review the journal together before it restarts.</div></div>
+    </div>
+    <div class="card rulebox">
+      <h3>Core: add on deep dips, never sell</h3>
+      <div class="rule"><div class="k">Trigger</div><div class="v">Three or more triggers fire, or the index is 4% or more below its 10-day high, with the trend filter on.</div></div>
+      <div class="rule"><div class="k">Action</div><div class="v">Move £60 of the cash buffer into VWRP. The buffer refills from money you add. Core holdings are sold only if you need the money for your life.</div></div>
+    </div>
+    <div class="note warn">
+      <strong>The nevers.</strong>
+      <span>No CFDs, no leverage, no options. No single stocks in the first 90 days (after that, at most £50 of play money, separate from the sleeve, and written down as tuition). No averaging down. No adding to a position because it "feels" oversold. No trades that were not in the morning brief. No checking the app more than twice a day.</span>
+    </div>
+  </section>
+
+  <section id="routine">
+    <h2>Your morning routine</h2>
+    <p>Five minutes before the London open. Trading 212 shows the ETFs live from 08:00; the first five minutes are an auction with wide spreads, so act after 08:05.</p>
+    <ol class="steps">
+      <li><div><div class="t">06:42 UK, weekdays</div>The brief lands as a push notification and this page updates. It reads the previous US close, runs the rules, and tells you BUY, SELL, HOLD or CASH, with the exact amount.</div></li>
+      <li><div><div class="t">08:05 to 08:30</div>Do exactly what the brief says, nothing else. BUY: £400 of VUAG, limit at the live offer. SELL: all VUAG units. CASH or HOLD: close the app.</div></li>
+      <li><div><div class="t">Right after</div>Tell me the fill in one line ("bought £400 VUAG at 110.95"). I record it so tomorrow's brief tracks the real position and P&amp;L.</div></li>
+      <li><div><div class="t">Monthly</div>If you add money, say how much. It tops up the cash buffer first, then the core. Once a quarter we look at the journal: win rate, average trade, and whether you followed the rules.</div></li>
+    </ol>
+  </section>
+
+  <section id="brief" class="card">
+    <h2>Today's brief</h2>
+    <!--BRIEF-->
+    <h4>Day one actions (Monday 26 October 2026)</h4>
+    <ol>
+      <li>Open or switch to the Trading 212 Stocks &amp; Shares ISA. Deposit £1,300. Turn on interest on cash.</li>
+      <li>After 08:05, buy £650 of VWRP and £130 of SGLN by value. Use the default market order after the opening auction has cleared.</li>
+      <li>Leave £520 in cash: £120 is the buffer, £400 is the sleeve. Nothing to buy for the sleeve today.</li>
+      <li>Send me the two fills. Then close the app.</li>
+    </ol>
+    <p class="small">Note on Day One readings: the index closed Friday two days down and 2.35% off its 10-day high with RSI(2) at 15. If Monday's US session closes lower again, Tuesday's brief will very likely say BUY.</p>
+  </section>
+
+  <section id="automation">
+    <h2>How the daily update works</h2>
+    <p>A scheduled task wakes a fresh Claude session every weekday at 06:42 UK. It fetches the latest S&amp;P 500 close and the ETF quotes, runs the desk script against the saved portfolio state, writes the day's brief to the <code>trading-desk</code> branch of your repository, splices it into this page, and sends you a push notification. The rules, the backtester and the brief generator are all in that branch so you can read and change them.</p>
+    <ul>
+      <li><strong>Live prices.</strong> Your cloud environment currently blocks market-data hosts, so the session finds the closes by web search, which is slower and occasionally a day behind. To fix that, open the environment's network settings and add <code>query1.finance.yahoo.com</code> and <code>query2.finance.yahoo.com</code> to Allowed domains, keeping package managers ticked.</li>
+      <li><strong>Execution stays with you.</strong> Trading 212 has a beta API that can place orders, but I have deliberately not wired it up. A human tapping Buy on a rule they understand is the safety mechanism in this plan. We can revisit after three clean months.</li>
+      <li><strong>Pausing.</strong> Ask me to pause or delete the scheduled task at any time. Nothing trades without you.</li>
+    </ul>
+  </section>
+
+  <section id="sources">
+    <h2>Sources and caveats</h2>
+    <ul class="src">
+      <li>Chague, De-Losso and Giovannetti, "Day Trading for a Living?" (FGV, 2020): 97% of persistent day traders lost money; 0.4% earned more than a bank teller.</li>
+      <li>Barber, Lee, Liu and Odean, Taiwan day-trading studies (1992 to 2006): fewer than 1% reliably profitable after costs.</li>
+      <li>Trading 212 fees (0% commission, 0.15% FX), flexible ISA, fractional shares from £1, interest on uninvested cash (3.55% to 3.80% AER variable in autumn 2026), public API in beta: Trading 212 help centre and 2026 broker reviews.</li>
+      <li>UK stamp duty 0.5% on UK share purchases, ETFs exempt. Capital gains allowance £3,000 for 2026/27 (18%/24% rates); ISA allowance £20,000; none of it applies inside an ISA.</li>
+      <li>UK equities settle T+2 until the move to T+1 on 11 October 2027; US equities settle T+1. Trading 212 users report sale proceeds can be reinvested immediately; withdrawals wait for settlement.</li>
+      <li>Backtest data: SteelCerberus us-market-data (daily S&amp;P 500 with dividends, 1885 to 19 December 2025). Current index levels, moving averages and ETF prices: Investing.com, FRED, WallStreetNumbers, Vanguard and London Stock Exchange pages for 23 October 2026.</li>
+    </ul>
+    <p class="small">This page is a personal plan, not financial advice. Capital is at risk. A backtest describes the past under assumptions; it does not promise the future. If your circumstances change, the plan changes.</p>
+  </section>
+</div>
+<div class="tip" id="tip" hidden></div>
+
+<script>
+(function(){
+  var tip = document.getElementById('tip');
+  function showTip(e, html){ tip.innerHTML = html; tip.hidden = false; moveTip(e); }
+  function moveTip(e){ var x = e.clientX + 14, y = e.clientY + 14; var w = tip.offsetWidth, h = tip.offsetHeight; if (x + w > window.innerWidth - 8) x = e.clientX - w - 14; if (y + h > window.innerHeight - 8) y = e.clientY - h - 14; tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+  function hideTip(){ tip.hidden = true; }
+  function hover(node, html){ node.addEventListener('mouseenter', function(e){ showTip(e, html); }); node.addEventListener('mousemove', moveTip); node.addEventListener('mouseleave', hideTip); node.addEventListener('blur', hideTip); }
+  function h(tag, cls, text){ var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+  function gbp(v){ return '£' + Math.round(v).toLocaleString('en-GB'); }
+
+  // Chart 1: yearly costs, horizontal bars (label above, bar + value below)
+  (function(){
+    var root = document.getElementById('hbCost'); if (!root) return;
+    var data = [
+      ['UK shares daily', 1950, '0.5% stamp duty on each buy + spread'],
+      ['US stock daily, converting pounds on each trade', 1138, '0.15% FX each way + spread'],
+      ['US stock daily, holding a dollar balance', 245, 'spread only (£165 to £325)'],
+      ['This plan', 5, '8 ETF round trips a year + fund charges']
+    ];
+    var max = 2000;
+    data.forEach(function(d){
+      var row = h('div', 'hrow'); row.appendChild(h('div', 'hlbl', d[0]));
+      var track = h('div', 'htrack');
+      var bar = h('div', 'hbar'); bar.style.width = (d[1] / max * 82) + '%'; bar.tabIndex = 0; bar.setAttribute('aria-label', d[0] + ': ' + gbp(d[1]) + ' a year');
+      hover(bar, '<strong>' + d[0] + '</strong><br>' + gbp(d[1]) + ' a year · ' + d[2]);
+      track.appendChild(bar); track.appendChild(h('span', 'hval', gbp(d[1])));
+      row.appendChild(track); root.appendChild(row);
+    });
+  })();
+
+  // Chart 2: average trade by period, columns
+  (function(){
+    var root = document.getElementById('colEdge'); if (!root) return;
+    var data = [['1993 to 1999', 0.87, 71, 70], ['2000 to 2009', 0.38, 59, 63], ['2010 to 2019', 0.34, 68, 87], ['2020 to 2025', 0.57, 74, 54]];
+    var max = 1.0;
+    var plot = h('div', 'plot');
+    [0.25, 0.5, 0.75, 1.0].forEach(function(v){
+      var g = h('div', 'gl'); g.style.bottom = (v / max * 100) + '%';
+      g.appendChild(h('span', null, '+' + v.toFixed(2) + '%')); plot.appendChild(g);
+    });
+    var zero = h('div', 'gl'); zero.style.bottom = '0'; zero.style.borderTop = '0'; zero.appendChild(h('span', null, '0%')); plot.appendChild(zero);
+    var row = h('div', 'colrow');
+    var xl = h('div', 'xlabels');
+    data.forEach(function(d){
+      var col = h('div', 'col');
+      col.appendChild(h('div', 'cval', '+' + d[1].toFixed(2) + '%'));
+      var bar = h('div', 'cbar'); bar.style.height = (d[1] / max * 100) + '%'; bar.tabIndex = 0; bar.setAttribute('aria-label', d[0] + ': +' + d[1].toFixed(2) + '% per trade');
+      hover(bar, '<strong>' + d[0] + '</strong><br>+' + d[1].toFixed(2) + '% per trade · ' + d[2] + '% winners · ' + d[3] + ' trades');
+      col.appendChild(bar); row.appendChild(col);
+      xl.appendChild(h('span', null, d[0]));
+    });
+    plot.appendChild(row); root.appendChild(plot); root.appendChild(xl);
+  })();
+})();
+</script>

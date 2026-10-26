@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-26",
+  "asof": "2026-10-23",
+  "spx_close": 7623.68,
+  "action": "CASH",
+  "why": "only 1 of 4 pullback triggers fired (need 2); nothing to do",
+  "instruction": "Do nothing with the sleeve today. It stays as cash earning interest.",
+  "triggers": {
+    "rsi2_lt_10": false,
+    "rsi4_lt_25": false,
+    "three_down_closes": false,
+    "two_pct_off_10d_high": true
+  },
+  "n_fire": 1,
+  "above_trend": true,
+  "sma200": 7291.31,
+  "sma5": 7689.5160000000005,
+  "rsi2": 15.3,
+  "rsi4": 27.2,
+  "down_streak": 2,
+  "off_10d_high_pct": -2.35,
+  "vix": 19.45,
+  "dip_buy": false,
+  "quotes": {
+    "vix": 19.45,
+    "vuag": 110.82,
+    "vwrp": 141.78,
+    "sgln": 59.66,
+    "source": "manual"
+  },
+  "sleeve": {
+    "in_position": false,
+    "entry_date": null,
+    "entry_price": null,
+    "units": 0,
+    "size_gbp": 400,
+    "days_held": 0
+  },
+  "total_value": 1300.0
+}
